@@ -22,12 +22,12 @@ String today = sdf.format(now);
 			</div>
 			<div class="stat-card info">
 				<h3>관리자</h3>
-				<div class="stat-number"><%=request.getAttribute("accountName") %></div>
+				<div class="stat-number"><%=util.HtmlEscaper.h(String.valueOf(request.getAttribute("accountName")))%></div>
 			</div>
 		</div>
 		<section class="admin-section">
 			<h2>상품 글 작성</h2>
-			<form action="${pageContext.request.contextPath}/addProduct.do"
+			<form action="${pageContext.request.contextPath}/products?_csrf=${sessionScope.csrfToken}"
 				name="newProduct" method="post" enctype="multipart/form-data">
 				<div class="form-group">
 					<label for="title">상품 코드</label> <input type="text" id="productId"
@@ -67,6 +67,7 @@ String today = sdf.format(now);
 
 				<input type="button" class="form-submit" value="등록"
 					onclick="checkAddProduct()">
+				<input type="hidden" name="_csrf" value="${sessionScope.csrfToken}">
 			</form>
 		</section>
 
@@ -78,14 +79,27 @@ String today = sdf.format(now);
 	<script>
 	const urlParams = new URLSearchParams(window.location.search);
     const message = urlParams.get('msg');
+    const errorParam = urlParams.get('error');
     if (message === 'updateproductsucceeded') {
         alert("상품 정보가 성공적으로 변경되었습니다!");
         history.replaceState(null, '', window.location.pathname);
     } else if (message === 'delaccountsucceeded') {
         alert("상품이 성공적으로 삭제되었습니다!");
         history.replaceState(null, '', window.location.pathname);
+    } else if (errorParam) {
+        alert(decodeURIComponent(errorParam));
+        history.replaceState(null, '', window.location.pathname);
     }
 	
+
+		function deleteProduct(uuid) {
+			showConfirm('정말 삭제하시겠습니까?', function(ok) {
+				if (!ok) return;
+				fetch('${pageContext.request.contextPath}/products/' + uuid, { method: 'DELETE', headers: { 'X-CSRF-Token': '${sessionScope.csrfToken}' } })
+					.then(res => { if (res.ok) { location.href = location.pathname + '?msg=delaccountsucceeded'; } else { alert('상품 삭제에 실패했습니다.'); } })
+					.catch(() => alert('서버 오류가 발생했습니다. 다시 시도해주세요.'));
+			});
+		}
 	function checkAddProduct(){
 		let productId = document.getElementById("productId")
 		let pname = document.getElementById("pname")
@@ -126,8 +140,14 @@ String today = sdf.format(now);
 		}
 		
 		//unitPrice
-		if(isNaN(unitPrice.value) || unitPrice.value.length==0 || unitPrice.value<0){
+		if(isNaN(unitPrice.value) || unitPrice.value.length==0 || parseInt(unitPrice.value)<=0){
 				alert("[상품가격]양의 정수만 입력하세요.")
+				unitPrice.select()
+				unitPrice.focus()
+				return false
+		}
+		if(parseInt(unitPrice.value) > 2147483647){
+				alert("[상품가격]최대 2,147,483,647 이하로 입력하세요.")
 				unitPrice.select()
 				unitPrice.focus()
 				return false
@@ -136,6 +156,12 @@ String today = sdf.format(now);
 		//category
 		if (!category.value) {
 			alert("[카테고리]필수 입력사항입니다.")
+			category.select()
+			category.focus()
+			return false
+		}
+		if (category.value.length > 20) {
+			alert("[카테고리]20자 이하로 입력해주세요.")
 			category.select()
 			category.focus()
 			return false

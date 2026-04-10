@@ -1,8 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
-<%@ page import="dto.ScanDTO"%>
+<%@ page import="domain.entity.Scan"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%
-ScanDTO result = (ScanDTO) request.getAttribute("result");
+Scan result = (Scan) request.getAttribute("result");
 %>
 <%@ include file="module/header.jsp"%>
 <body data-page="article">
@@ -19,7 +20,7 @@ ScanDTO result = (ScanDTO) request.getAttribute("result");
 					class="status-badge" id="status">완료</span>
 			</div>
 			<h1 id="articleTitle">스캔 결과</h1>
-			<div class="url-display" id="urlDisplay">파일: ${result.fileName}</div>
+			<div class="url-display" id="urlDisplay">파일: <c:out value="${result.fileName}"/></div>
 		</div>
 
 		<div class="ai-section">

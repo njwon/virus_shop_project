@@ -9,29 +9,20 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
 
-import com.oreilly.servlet.MultipartRequest;
-import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
-import java.util.Enumeration;
-import java.util.UUID;
-import java.io.File;
+import domain.entity.Member;
 
-import dao.MemberDAO;
-import dao.ProductDAO;
-import dto.MemberDTO;
-import util.DBManager;
-import util.PasswordManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@WebServlet("/UserCheckForm.do")
+@WebServlet("/account/verify")
 public class LoadUserCheckFormServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(LoadUserCheckFormServlet.class);
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 	    
-	    HttpSession session = request.getSession();
-	    MemberDTO user = (MemberDTO) session.getAttribute("loginUser");
+	    HttpSession session = request.getSession(false);
+	    Member user = session != null ? (Member) session.getAttribute("loginUser") : null;
 
 	    if (user == null) {
 	        
@@ -45,7 +36,7 @@ public class LoadUserCheckFormServlet extends HttpServlet {
 	        return;
 	    }
 
-	    System.out.println("유저님 어서오세요.");
-	    request.getRequestDispatcher("/WEB-INF/html/dashboard.jsp").forward(request, response);
+	    log.info("계정 인증 폼 접근 - ID: {}, 이름: {}", user.getId(), user.getName());
+	    request.getRequestDispatcher("/WEB-INF/html/profile.jsp").forward(request, response);
 	}
 }

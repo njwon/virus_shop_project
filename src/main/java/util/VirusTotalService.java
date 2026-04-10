@@ -5,15 +5,41 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 
-// ★ 중요: json-xxxx.jar 라이브러리가 lib 폴더에 있어야 작동합니다.
-import org.json.JSONObject; 
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VirusTotalService {
 
-    // 환경변수 VIRUSTOTAL_API_KEY 에서 API 키를 읽어옵니다.
-    private static final String API_KEY = System.getenv("VIRUSTOTAL_API_KEY");
+    private static final Logger log = LoggerFactory.getLogger(VirusTotalService.class);
 
-    // [1] 파일을 바이러스 토탈 서버로 전송하는 기능
+    private static final String API_KEY = loadApiKey();
+
+    private static String loadApiKey() {
+        String fromEnv = System.getenv("VIRUSTOTAL_API_KEY");
+        if (fromEnv != null && !fromEnv.isEmpty()) return fromEnv;
+
+        String[] envPaths = {
+            System.getProperty("catalina.home") + "/.env",
+            System.getProperty("user.home") + "/.env"
+        };
+        for (String envPath : envPaths) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(envPath))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.startsWith("VIRUSTOTAL_API_KEY=")) {
+                        return line.substring("VIRUSTOTAL_API_KEY=".length()).trim();
+                    }
+                }
+            } catch (Exception e) {
+                log.debug(".env 파일을 읽을 수 없습니다: {}", envPath);
+            }
+        }
+
+        throw new IllegalStateException("[VirusTotalService] VIRUSTOTAL_API_KEY가 설정되지 않았습니다. .env 파일 또는 환경변수를 확인하세요.");
+    }
+
     public String uploadFile(File file) throws Exception {
         String boundary = "---" + System.currentTimeMillis();
         URL url = new URL("https://www.virustotal.com/api/v3/files");
@@ -27,34 +53,30 @@ public class VirusTotalService {
         OutputStream os = conn.getOutputStream();
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, "UTF-8"), true);
 
-        // 파일 전송을 위한 헤더 작성
         writer.append("--" + boundary).append("\r\n");
         writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"").append("\r\n");
-        writer.append("Content-Type: application/octet-stream").append("\r\n"); 
+        writer.append("Content-Type: application/octet-stream").append("\r\n");
         writer.append("\r\n").flush();
-        
-        // 실제 파일 데이터 전송
+
         Files.copy(file.toPath(), os);
         os.flush();
-        
-        // 종료 헤더
+
         writer.append("\r\n").flush();
         writer.append("--" + boundary + "--").append("\r\n");
         writer.close();
 
-        // 응답 받기 (분석 ID 획득)
         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         StringBuilder response = new StringBuilder();
         String line;
         while ((line = br.readLine()) != null) response.append(line);
-        
+
         JSONObject json = new JSONObject(response.toString());
-        return json.getJSONObject("data").getString("id"); // 분석 ID 리턴
+        return json.getJSONObject("data").getString("id");
     }
 
-    // [2] 검사 결과가 나올 때까지 기다렸다가 받아오는 기능
     public JSONObject getReport(String analysisId) throws Exception {
-        while (true) {
+        final int MAX_RETRIES = 20;
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             URL url = new URL("https://www.virustotal.com/api/v3/analyses/" + analysisId);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -64,18 +86,17 @@ public class VirusTotalService {
             StringBuilder response = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) response.append(line);
-            
+
             JSONObject json = new JSONObject(response.toString());
             String status = json.getJSONObject("data").getJSONObject("attributes").getString("status");
 
-            // 상태가 'completed'가 되면 결과를 반환
             if ("completed".equals(status)) {
                 return json.getJSONObject("data").getJSONObject("attributes").getJSONObject("stats");
             }
 
-            // 아직 검사 중이면 3초 대기 후 다시 질문
-            System.out.println("검사 진행 중... 3초 대기...");
-            Thread.sleep(3000); 
+            log.info("검사 진행 중... ({}/{}), 3초 대기...", attempt, MAX_RETRIES);
+            Thread.sleep(3000);
         }
+        throw new Exception("[VirusTotalService] 분석 타임아웃: " + MAX_RETRIES + "회 재시도 초과 (약 60초)");
     }
 }

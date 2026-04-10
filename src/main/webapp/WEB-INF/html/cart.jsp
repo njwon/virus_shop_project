@@ -3,25 +3,17 @@
 <%@ include file="module/header.jsp"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%
-System.out.println("DEBUG: " + request.getAttribute("unitPrice"));
-Object test = request.getAttribute("total");
-System.out.println("데이터 타입: " + test.getClass().getName());
-System.out.println("데이터 내용: " + test);
 Object totalObj = request.getAttribute("total");
 int totalSum = 0;
 
-if (totalObj != null) {
-	if (totalObj instanceof String) {
-		totalSum = Integer.parseInt((String) totalObj);
-	} else {
-		totalSum = ((Number) totalObj).intValue();
-	}
+if (totalObj instanceof String) {
+	totalSum = Integer.parseInt((String) totalObj);
+} else if (totalObj instanceof Number) {
+	totalSum = ((Number) totalObj).intValue();
 }
 
 int tax = (int) (totalSum * 0.1);
 int finalTotal = (int) (totalSum * 1.1);
-
-System.out.println("최종 계산 결과: " + finalTotal);
 %>
 <body data-page="cart">
 	<div class="grid-bg"></div>
@@ -72,13 +64,7 @@ System.out.println("최종 계산 결과: " + finalTotal);
 
 				<button class="btn btn-primary"
 					style="width: 100%; margin-top: 1.5rem;"
-					onclick="
-							<c:if test="${not empty cartList}">
-							if(confirm('결제를 진행하시겠습니까? 장바구니가 비워집니다.')) { location.href='${pageContext.request.contextPath}/clearCart.do'; }
-							</c:if>
-							<c:if test="${empty cartList}">
-							alert('로그인 후 진행가능합니다.'); location.href='${pageContext.request.contextPath}/login'; 
-							</c:if>">결제하기</button>
+					onclick="checkout()">결제하기</button>
 				<a href="<%=request.getContextPath()%>" class="btn btn-safe"
 					style="width: 100%; margin-top: 1rem; text-align: center;">계속
 					쇼핑하기</a>
@@ -86,7 +72,22 @@ System.out.println("최종 계산 결과: " + finalTotal);
 		</div>
 	</main>
 	<script>
-    	document.querySelectorAll('.price-format').forEach(el => {
+    	function checkout() {
+		<c:choose>
+		<c:when test="${not empty cartList}">
+		showConfirm('결제를 진행하시겠습니까? 장바구니가 비워집니다.', function(ok) {
+			if (!ok) return;
+			fetch('${pageContext.request.contextPath}/cart', { method: 'DELETE', headers: { 'X-CSRF-Token': '${sessionScope.csrfToken}' } })
+				.then(res => { if (res.ok) { alert('결제가 완료되었습니다.'); location.reload(); } else { alert('서버 오류가 발생했습니다. 다시 시도해주세요.'); } })
+				.catch(() => alert('서버 오류가 발생했습니다. 다시 시도해주세요.'));
+		});
+		</c:when>
+		<c:otherwise>
+		alert('장바구니가 비어있습니다.');
+		</c:otherwise>
+		</c:choose>
+	}
+	document.querySelectorAll('.price-format').forEach(el => {
         	const value = parseInt(el.innerText);
         	if (!isNaN(value)) {
             	// 숫자를 현지 통화 형식(콤마 포함)으로 변환

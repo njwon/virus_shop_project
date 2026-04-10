@@ -1,5 +1,27 @@
+# 환경 설정 (API 키 등 민감 정보)
 .env
+
+# 빌드 산출물
 build/
+target/
 *.class
+*.war
+*.jar
+
+# 로그
 *.log
+
+# 업로드 파일
 upload/
+
+# IDE 설정
+.settings/
+.project
+.classpath
+*.launch
+.idea/
+*.iml
+
+# OS 파일
+.DS_Store
+Thumbs.db

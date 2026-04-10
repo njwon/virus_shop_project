@@ -22,20 +22,26 @@
                 악성코드 보안 분석으로 취약점을 사전에 발견하고 해결하세요
             </p>
             <div class="hero-cta">
-                <a href="<%=request.getContextPath()%>/write" class="btn btn-primary">새 스캔 시작</a>
-                <a href="<%=request.getContextPath()%>/UserBoard.do" class="btn btn-safe">대시보드 보기</a>
+                <a href="<%=request.getContextPath()%>/scans/new" class="btn btn-primary">새 스캔 시작</a>
+                <a href="<%=request.getContextPath()%>/dashboard" class="btn btn-safe">대시보드 보기</a>
             </div>
         </div>
     </section>
-
 <%@ include file="includes/products.jsp" %>
 
-	<h1 class="onday"><%= today %></h1>
+	<div class="onday-wrapper"><h1 class="onday"><%= today %></h1></div>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const message = urlParams.get('msg');
+    const error = urlParams.get('error');
 
-    if (message === 'signupsucceeded') {
+    if (error === 'scanfailed') {
+        alert("파일 검사 중 오류가 발생했습니다. 다시 시도해주세요.");
+        history.replaceState(null, '', window.location.pathname);
+    } else if (error === 'forbidden') {
+        alert("접근 권한이 없습니다.");
+        history.replaceState(null, '', window.location.pathname);
+    } else if (message === 'signupsucceeded') {
         alert("회원가입이 성공적으로 완료되었습니다!");
         history.replaceState(null, '', window.location.pathname);
     } else if(message === 'loginsucceeded') {

@@ -2,44 +2,42 @@ package controller.Router;
 
 import java.io.IOException;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.sql.Connection;
-import com.oreilly.servlet.MultipartRequest;
-import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
-import java.util.Enumeration;
-import java.io.File;
 
-import dao.MemberDAO;
-import dao.ProductDAO;
-import dto.MemberDTO;
-import dto.ProductDTO;
-import util.DBManager;
-import util.PasswordManager;
+import domain.entity.Member;
 
-@WebServlet("/AccountDetail.do")
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@WebServlet("/account")
 public class LoadAccountDetailServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(LoadAccountDetailServlet.class);
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 	throws ServletException, IOException {
 		request.setCharacterEncoding("utf-8");
-		HttpSession session = request.getSession();
-	    MemberDTO user = (MemberDTO) session.getAttribute("loginUser");
-	    
+		HttpSession session = request.getSession(false);
+	    Member user = session != null ? (Member) session.getAttribute("loginUser") : null;
+
+	    if (user == null) {
+	        response.sendRedirect(request.getContextPath() + "/login");
+	        return;
+	    }
+
+	    log.info("계정 상세 페이지 접근 - ID: {}, 이름: {}", user.getId(), user.getName());
 	    try {
             request.setAttribute("user", user);
-            
+
             request.getRequestDispatcher("/WEB-INF/html/profile.jsp").forward(request, response);
             
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("오류 발생", e);
             response.sendRedirect(request.getContextPath());
         }
 	}

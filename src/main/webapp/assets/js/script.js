@@ -34,7 +34,7 @@ if (currentPage === "index") {
 
     // 점(Dot) 깜빡임 애니메이션
     const dot = document.querySelectorAll('.dot');
-    const onday = document.querySelector('.onday');
+    const onday = document.querySelector('.onday-wrapper');
     
     if (dot && window.matchMedia('(min-width: 1024px)').matches) {
       dot.forEach(function (e) { e.style.opacity = '0'; });
@@ -54,9 +54,9 @@ if (currentPage === "index") {
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          if (onday) onday.style.filter = 'blur(5px)';
-        } else {
           if (onday) onday.style.filter = 'blur(1px)';
+        } else {
+          if (onday) onday.style.filter = 'blur(5px)';
         }
       });
     }, {
@@ -64,7 +64,7 @@ if (currentPage === "index") {
       threshold: 0.1
     });
 
-    const targetElement = document.querySelector('.scans-section');
+    const targetElement = document.querySelector('.hero');
     if (targetElement) {
       observer.observe(targetElement);
     }
@@ -84,13 +84,6 @@ if (currentPage === "dashboard") {
     window.location.href = `article.jsp?id=${id}`
   }
 
-  // 삭제 버튼 클릭 시 (브라우저 기본 confirm 창 사용)
-  function deleteScan(id) {
-    if (confirm("정말 삭제하시겠습니까?")) {
-      // 실제 구현 시: location.href = 'delete.do?id=' + id; 형태로 변경 필요
-      alert("삭제 기능은 서버와 연동해야 합니다."); 
-    }
-  }
 
   // 수정 버튼 클릭 시 (모달 로직 삭제됨)
   // 대신 수정 페이지로 이동하거나, 구현 방식에 따라 채워넣으세요.

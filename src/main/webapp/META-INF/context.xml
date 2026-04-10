@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <Resource
+        name="jdbc/oracle"
+        auth="Container"
+        type="javax.sql.DataSource"
+        driverClassName="oracle.jdbc.driver.OracleDriver"
+        url="jdbc:oracle:thin:@localhost:1521/XEPDB1"
+        username="C##dbexam"
+        password="m1234"
+        maxTotal="20"
+        maxIdle="10"
+        minIdle="5"
+        maxWaitMillis="5000"
+        validationQuery="SELECT 1 FROM DUAL"
+        testOnBorrow="true"
+        testWhileIdle="true"
+        timeBetweenEvictionRunsMillis="30000"
+    />
+</Context>

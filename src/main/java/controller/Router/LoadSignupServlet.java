@@ -9,15 +9,18 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-import dao.MemberDAO;
-import dao.ProductDAO;
-import dto.ProductDTO;
+import domain.entity.Product;
 
 @WebServlet("/signup")
 public class LoadSignupServlet extends HttpServlet {	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		RequestDispatcher dis = request.getRequestDispatcher("/WEB-INF/html/signup.jsp");
-		dis.forward(request, response);
+		HttpSession session = request.getSession(false);
+		if (session != null && session.getAttribute("loginUser") != null) {
+			response.sendRedirect(request.getContextPath() + "/dashboard");
+			return;
+		}
+		request.getRequestDispatcher("/WEB-INF/html/signup.jsp").forward(request, response);
 	}
 }

@@ -16,7 +16,7 @@
 			<div class="contact-form-section">
 				<h2 class="section-title">새 문의 작성</h2>
 				<form id="contactForm" class="contact-form" name="newPost"
-					action='${pageContext.request.contextPath}/addPost.do'
+					action='${pageContext.request.contextPath}/boards'
 					method="post">
 					<div class="form-group">
 						<label for="contactTitle">제목</label> <input type="text"
@@ -30,6 +30,7 @@
 					</div>
 					<input type="button" class="form-submit" value="문의 등록"
 						onclick="checkPost()">
+					<input type="hidden" name="_csrf" value="${sessionScope.csrfToken}">
 				</form>
 			</div>
 
@@ -48,20 +49,20 @@
 						<c:otherwise>
 							<c:forEach var="dto" items="${list}">
 								<div class="inquiry-item"
-									onclick="window.location.href='${pageContext.request.contextPath}/BoardDetail?id=${dto.id}'">
+									onclick="window.location.href='${pageContext.request.contextPath}/boards/${dto.uuid}'">
 									<div class="inquiry-header">
-										<h3 class="inquiry-title">${dto.subject}</h3>
+										<h3 class="inquiry-title"><c:out value="${dto.subject}"/></h3>
 										<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
 											<c:if
 												test="${sessionScope.loginUser.id != null && sessionScope.loginUser.id == dto.memberId}">
 												<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
 
 													<button class="btn btn-small btn-safe"
-														onclick="event.stopPropagation(); window.location.href='${pageContext.request.contextPath}/UpdateBoard?id=${dto.id}'">
+														onclick="event.stopPropagation(); window.location.href='${pageContext.request.contextPath}/boards/${dto.uuid}/edit'">
 														수정</button>
 
 													<button class="btn btn-small btn-danger"
-														onclick="event.stopPropagation(); if(confirm('정말 삭제하시겠습니까?')) { window.location.href='${pageContext.request.contextPath}/DeleteBoard.do?id=${dto.id}'; }">
+														onclick="event.stopPropagation(); deleteBoard('${dto.uuid}')">
 														삭제</button>
 
 												</div>
@@ -70,13 +71,13 @@
 									</div>
 									<div class="inquiry-meta">
 										<span class="inquiry-date">${dto.date}</span> <span
-											class="inquiry-author">${dto.memberName}</span> <span
+											class="inquiry-author"><c:out value="${dto.memberName}"/></span> <span
 											class="inquiry-hit">조회수: ${dto.hit}</span>
 									</div>
 									<div class="wrapper"
 										style="position: relative; width: 100%; height: 24px;">
 										<p class="inquiry-preview"
-											style="position: absolute; top: 0; left: 0; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;">${dto.content}</p>
+											style="position: absolute; top: 0; left: 0; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0;"><c:out value="${dto.content}"/></p>
 									</div>
 								</div>
 							</c:forEach>
@@ -86,7 +87,7 @@
 				<div class="pagination"
 					style="text-align: center; margin-top: 30px;">
 					<c:if test="${ph.showPrev}">
-						<a href="Board?page=${ph.beginPage - 1}#page">[이전]</a>
+						<a href="boards?page=${ph.beginPage - 1}#page">[이전]</a>
 					</c:if>
 
 					<c:forEach var="i" begin="${ph.beginPage}" end="${ph.endPage}">
@@ -95,14 +96,14 @@
 								<strong style="margin: 0 5px; color: #666;">${i}</strong>
 							</c:when>
 							<c:otherwise>
-								<a href="Board?page=${i}#page"
+								<a href="boards?page=${i}#page"
 									style="margin: 0 5px; color: #666; text-decoration: none;">${i}</a>
 							</c:otherwise>
 						</c:choose>
 					</c:forEach>
 
 					<c:if test="${ph.showNext}#page">
-						<a href="Board?page=${ph.endPage + 1}">[다음]</a>
+						<a href="boards?page=${ph.endPage + 1}">[다음]</a>
 					</c:if>
 				</div>
 			</div>
@@ -110,6 +111,7 @@
 	<script>
 		const urlParams = new URLSearchParams(window.location.search);
 		const message = urlParams.get('msg');
+		const errorParam = urlParams.get('error');
 		if (message === 'addpostsucceeded') {
 			alert("게시글이 성공적으로 등록되었습니다!");
 			history.replaceState(null, '', window.location.pathname);
@@ -119,6 +121,18 @@
 		} else if (message === 'delaccountsucceeded') {
 			alert("게시글이 성공적으로 삭제되었습니다!");
 			history.replaceState(null, '', window.location.pathname);
+		} else if (errorParam) {
+			alert(decodeURIComponent(errorParam));
+			history.replaceState(null, '', window.location.pathname);
+		}
+
+		function deleteBoard(uuid) {
+			showConfirm('정말 삭제하시겠습니까?', function(ok) {
+				if (!ok) return;
+				fetch('${pageContext.request.contextPath}/boards/' + uuid, { method: 'DELETE', headers: { 'X-CSRF-Token': '${sessionScope.csrfToken}' } })
+					.then(res => { if (res.ok) { location.href = location.pathname + '?msg=delaccountsucceeded'; } else { alert('게시글 삭제에 실패했습니다.'); } })
+					.catch(() => alert('서버 오류가 발생했습니다. 다시 시도해주세요.'));
+			});
 		}
 		function checkPost() {
 			let contactTitle = document.getElementById("contactTitle")
@@ -133,9 +147,14 @@
 				}
 			}
 
-			//category
 			if (!contactTitle.value) {
 				alert("제목은 필수 입력사항입니다.")
+				contactTitle.select()
+				contactTitle.focus()
+				return false
+			}
+			if (contactTitle.value.length > 100) {
+				alert("[제목]100자 이하로 입력해주세요.")
 				contactTitle.select()
 				contactTitle.focus()
 				return false

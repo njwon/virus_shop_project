@@ -1,7 +1,7 @@
 package controller.Router;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,55 +9,35 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
 
-import com.oreilly.servlet.MultipartRequest;
-import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
+import domain.entity.Member;
+import domain.entity.Product;
+import infrastructure.persistence.ProductRepositoryImpl;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.UUID;
-import java.io.File;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import dao.MemberDAO;
-import dao.ProductDAO;
-import dto.MemberDTO;
-import dto.ProductDTO;
-import util.DBManager;
-import util.PasswordManager;
-
-@WebServlet("/AdminBoard.do")
+@WebServlet("/admin")
 public class LoadAdminDashboardServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-	    
-	    HttpSession session = request.getSession();
-	    MemberDTO user = (MemberDTO) session.getAttribute("loginUser");
+    private static final long serialVersionUID = 1L;
+    private static final Logger log = LoggerFactory.getLogger(LoadAdminDashboardServlet.class);
 
-	    if (user == null || !"ADMIN".equals(user.getRole())) {
-	        
-	        response.setContentType("text/html; charset=UTF-8");
-	        PrintWriter out = response.getWriter();
-	        out.println("<script>");
-	        out.println("alert('관리자만 접근 가능합니다.');");
-	        out.println("location.href='" + request.getContextPath() + "';");
-	        out.println("</script>");
-	        out.close();
-	        return;
-	    }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        Member user = session != null ? (Member) session.getAttribute("loginUser") : null;
 
-	    System.out.println("관리자님 어서오세요.");
-	    ProductDAO Pdao = ProductDAO.getInstance();
-		MemberDAO Mdao = MemberDAO.getInstance();
-		
-		ArrayList<ProductDTO> list = Pdao.getAllProducts();
-		int totalCount = (list != null) ? list.size() : 0;
-		
-		request.setAttribute("productList", list);
-		request.setAttribute("productCount", totalCount);
-		request.setAttribute("accountName", user.getName());
-	    request.getRequestDispatcher("/WEB-INF/html/admindashboard.jsp").forward(request, response);
-	}
+        if (user == null || !"ADMIN".equals(user.getRole())) {
+            response.sendRedirect(request.getContextPath() + "/?error=forbidden");
+            return;
+        }
+
+        log.info("관리자 대시보드 접근 - ID: {}", user.getId());
+        ArrayList<Product> list = ProductRepositoryImpl.getInstance().findAll();
+
+        request.setAttribute("productList", list);
+        request.setAttribute("productCount", list != null ? list.size() : 0);
+        request.setAttribute("accountName", user.getName());
+        request.getRequestDispatcher("/WEB-INF/html/admindashboard.jsp").forward(request, response);
+    }
 }

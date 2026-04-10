@@ -14,7 +14,6 @@
 		return;
 	%>
 </c:if>
-
 <body data-page="write">
 	<%@ include file="module/nav.jsp"%>
 
@@ -26,7 +25,7 @@
 		<div class="form-container">
 			<h1>새 스캔</h1>
 
-			<form action="${pageContext.request.contextPath}/ScanFile.do"
+			<form action="${pageContext.request.contextPath}/scans?_csrf=${sessionScope.csrfToken}"
 				name="newScan" method="post" enctype="multipart/form-data">
 				<div class="form-group">
 					<label for="title">검사 대상 파일</label> <input type="file"
@@ -40,40 +39,33 @@
 			</form>
 		</div>
 	</main>
+
+	<div id="loadingModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:1.2rem;">
+		<div style="width:48px; height:48px; border:4px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+		<p style="color:var(--text-primary); font-size:1rem; letter-spacing:0.05em;">검사 중입니다. 잠시만 기다려주세요...</p>
+	</div>
+	<style>
+		@keyframes spin { to { transform: rotate(360deg); } }
+	</style>
+
 	<script>
 		function checkNewscan() {
-			let fileInput = document.getElementById("file")
-			file = fileInput.files[0];
-			/*
-			[1]productId:첫글자를 반드시 P로 시작하고 숫자를 조합해서 3-10자리까지 입력
-			[2]pname:최소 3자리 최대 12자리까지 입력
-			[3]unitPrice: 숫자만 입력, 음수 입력X
-			[4]manufacturer, category: 입력이나 선택 필수
-			[5]unitsInStock: 숫자만 입력
-			[6]productImage: 등록 필수
-			 */
+			const fileInput = document.getElementById("file");
+			const file = fileInput.files[0];
 
-			function check(regExp, e, msg) {
-				if (regExp.test(e.value)) {
-					return true
-				} else {
-					alert(msg)
-					return false
-				}
+			if (fileInput.files.length === 0) {
+				alert("검사할 파일을 선택해주세요.");
+				return false;
 			}
 
-			if(fileInput.files.length === 0){
-				alert("대상 파일을 등록해주세요")
-				return false
-			}
-			
 			if ((1024 * 1024) * 32 < file.size) {
-				alert("32MB 사이즈 미만만 업로드가 가능합니다.")
-				return false
+				alert("32MB 미만의 파일만 업로드 가능합니다.");
+				return false;
 			}
 
-			document.newScan.submit()
-
+			const modal = document.getElementById("loadingModal");
+			modal.style.display = "flex";
+			document.newScan.submit();
 		}
 	</script>
 	<%@ include file="module/footer.jsp"%>

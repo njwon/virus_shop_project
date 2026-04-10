@@ -42,6 +42,9 @@ body {
   overflow-x: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 body::-webkit-scrollbar {
@@ -388,6 +391,7 @@ body::before {
 
 /* Hero Section */
 .hero {
+  width: 100%;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -466,6 +470,7 @@ body::before {
 
 /* Scans Section */
 .scans-section {
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
   padding: 6rem 2rem;
@@ -617,28 +622,34 @@ body::before {
   z-index: 1;
 }
 
-.onday {
+.onday-wrapper {
   transition: filter 0.8s ease;
-  display: block;
   opacity: 0.2;
   filter: blur(1px);
+  rotate: 270deg;
+  position: fixed;
+  top: 45%;
+  left: -13%;
+  z-index: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  width: max-content;
+}
+
+.onday {
+  display: block;
   font-family: "Space Grotesk", sans-serif;
   font-size: clamp(3rem, 8vw, 5rem);
   font-weight: 700;
   line-height: 1.1;
   color: transparent;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   letter-spacing: -0.03em;
   text-align: center;
-  rotate: 270deg;
-  position: fixed;
-  top: 45%;
-  left: -13%;
   background-image: linear-gradient(rgba(42, 42, 42, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(42, 42, 42, 0.3) 1px, transparent 1px), linear-gradient(135deg, var(--text-primary) 30%, var(--danger) 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  z-index: -1;
 }
 
 .onday::before {
@@ -933,6 +944,7 @@ h1 {
 
 /* Dashboard Styles */
 .main {
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
   padding: 7rem 2rem 4rem;
@@ -1118,6 +1130,12 @@ body[data-page="article"] .main {
   color: var(--accent);
   border: 1px solid var(--accent);
   display: inline-block;
+}
+
+.status-badge--danger {
+  background: rgba(255, 68, 68, 0.1);
+  color: var(--danger);
+  border-color: var(--danger);
 }
 
 .user-grid {
@@ -2146,24 +2164,20 @@ footer {
   width: 100vw;
   background: rgba(10, 10, 10, 0.3);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border); 
-  font-size: 1.5vh; 
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5vh;
+  margin-top: auto;
 }
 
-body[data-page="login"] footer,
-body[data-page="signup"] footer {
-  position: absolute;
-  top: 100%;
-}
 
 @media (min-width:1301px) {
-  .onday{
+  .onday-wrapper{
     left: -8%;
   }
 }
 
 @media (min-width:769px) and (max-width:1300px) {
-  .onday{
+  .onday-wrapper{
     left: -13%;
   }
 }
