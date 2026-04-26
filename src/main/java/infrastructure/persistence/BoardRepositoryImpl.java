@@ -23,7 +23,7 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public int countAll() {
-        String sql = "SELECT count(*) FROM board";
+        String sql = "SELECT count(*) FROM BOARD";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -43,22 +43,19 @@ public class BoardRepositoryImpl implements BoardRepository {
     @Override
     public List<Board> findAll(int page, int pageSize) {
         List<Board> list = new ArrayList<>();
-        int startNum = (page - 1) * pageSize + 1;
-        int endNum   = page * pageSize;
-        String sql = "SELECT * FROM ("
-                + "    SELECT A.*, ROWNUM AS RNUM FROM ("
-                + "        SELECT b.num, b.member_id, m.name AS member_name, b.title, b.content, TO_CHAR(b.created_at, 'YYYY-MM-DD') AS created_at, b.view_count, b.ip, b.uuid"
-                + "        FROM board b JOIN MEMBER m ON b.member_id = m.id ORDER BY b.num DESC"
-                + "    ) A WHERE ROWNUM <= ?"
-                + ") WHERE RNUM >= ?";
+        int offset = (page - 1) * pageSize;
+        String sql = "SELECT b.num, b.member_id, m.name AS member_name, b.title, b.content, "
+                + "DATE_FORMAT(b.created_at, '%Y-%m-%d') AS created_at, b.view_count, b.ip, b.uuid "
+                + "FROM BOARD b JOIN MEMBER m ON b.member_id = m.id "
+                + "ORDER BY b.num DESC LIMIT ? OFFSET ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
             conn = DBManager.getConnection();
             pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, endNum);
-            pstmt.setInt(2, startNum);
+            pstmt.setInt(1, pageSize);
+            pstmt.setInt(2, offset);
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 Board board = new Board();
@@ -83,8 +80,9 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public Board findByUuid(String uuid) {
-        String sql = "SELECT b.num, b.member_id, m.name AS member_name, b.title, b.content, TO_CHAR(b.created_at, 'YYYY-MM-DD') AS created_at, b.view_count, b.ip, b.uuid"
-                + " FROM board b JOIN MEMBER m ON b.member_id = m.id WHERE b.uuid = HEXTORAW(?)";
+        String sql = "SELECT b.num, b.member_id, m.name AS member_name, b.title, b.content, "
+                + "DATE_FORMAT(b.created_at, '%Y-%m-%d') AS created_at, b.view_count, b.ip, b.uuid "
+                + "FROM BOARD b JOIN MEMBER m ON b.member_id = m.id WHERE b.uuid = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -116,7 +114,7 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public int save(Board board) {
-        String sql = "INSERT INTO board (num, member_id, title, content, created_at, view_count, ip, uuid) VALUES(njw_board_seq_num.nextval, ?, ?, ?, SYSDATE, ?, ?, SYS_GUID())";
+        String sql = "INSERT INTO BOARD (member_id, title, content, view_count, ip) VALUES (?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -138,7 +136,7 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public int updateByUuid(Board board) {
-        String sql = "UPDATE board SET title = ?, content = ? WHERE uuid = HEXTORAW(?)";
+        String sql = "UPDATE BOARD SET title = ?, content = ? WHERE uuid = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -158,7 +156,7 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public void deleteByUuid(String uuid) {
-        String sql = "DELETE FROM board WHERE uuid = HEXTORAW(?)";
+        String sql = "DELETE FROM BOARD WHERE uuid = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -175,7 +173,7 @@ public class BoardRepositoryImpl implements BoardRepository {
 
     @Override
     public int increaseHit(Board board) {
-        String sql = "UPDATE board SET view_count = board.view_count + 1 WHERE num = ?";
+        String sql = "UPDATE BOARD SET view_count = view_count + 1 WHERE num = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {

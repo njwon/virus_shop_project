@@ -81,7 +81,7 @@ public class MemberServlet extends HttpServlet {
             session.invalidate();
             response.sendRedirect(request.getContextPath() + "/?msg=accountdeletesucceeded");
         } catch (UseCaseException e) {
-            response.sendRedirect(request.getContextPath() + "/account?error=" + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/account?error=" + java.net.URLEncoder.encode(e.getMessage(), "UTF-8"));
         }
     }
 

@@ -91,7 +91,8 @@ public class ScanServlet extends HttpServlet {
 
         } catch (Exception e) {
             log.error("오류 발생", e);
-            response.sendRedirect(request.getContextPath() + "/?error=scanfailed");
+            String msg = (e instanceof UseCaseException) ? e.getMessage() : "파일 스캔 중 오류가 발생했습니다.";
+            response.sendRedirect(request.getContextPath() + "/scans/new?error=" + java.net.URLEncoder.encode(msg, "UTF-8"));
         } finally {
             if (file != null && file.exists()) {
                 file.delete();

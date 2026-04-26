@@ -23,9 +23,8 @@ public class ScanRepositoryImpl implements ScanRepository {
 
     @Override
     public void save(Scan scan) {
-        String sql = "INSERT INTO SCAN "
-                + "(num, member_id, scan_logtime, file_name, malicious, suspicious, undetected, harmless, uuid) "
-                + "VALUES (SCAN_SEQ.NEXTVAL, ?, SYSDATE, ?, ?, ?, ?, ?, SYS_GUID())";
+        String sql = "INSERT INTO SCAN (member_id, file_name, malicious, suspicious, undetected, harmless) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -85,7 +84,7 @@ public class ScanRepositoryImpl implements ScanRepository {
     @Override
     public List<Scan> findHistoryByUserId(String userId) {
         List<Scan> list = new ArrayList<>();
-        String sql = "SELECT num, uuid, file_name, TO_CHAR(scan_logtime, 'YYYY-MM-DD') as s_date, "
+        String sql = "SELECT num, uuid, file_name, DATE_FORMAT(scan_logtime, '%Y-%m-%d') AS s_date, "
                 + "malicious, suspicious, undetected, harmless "
                 + "FROM SCAN WHERE member_id = ? ORDER BY num DESC";
         Connection conn = null;

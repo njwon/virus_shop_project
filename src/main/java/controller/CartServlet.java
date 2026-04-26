@@ -70,8 +70,10 @@ public class CartServlet extends HttpServlet {
 
             new AddToCartUseCase().execute(cart);
             response.sendRedirect(request.getContextPath() + "/cart");
-        } catch (NumberFormatException | UseCaseException e) {
-            response.sendRedirect(request.getContextPath() + "/?error=" + URLEncoder.encode("잘못된 요청입니다.", "UTF-8"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/cart?error=" + URLEncoder.encode("잘못된 요청입니다.", "UTF-8"));
+        } catch (UseCaseException e) {
+            response.sendRedirect(request.getContextPath() + "/cart?error=" + URLEncoder.encode(e.getMessage(), "UTF-8"));
         }
     }
 

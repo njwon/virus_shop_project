@@ -30,7 +30,7 @@ public class CartRepositoryImpl implements CartRepository {
             conn = DBManager.getConnection();
             conn.setAutoCommit(false);
 
-            String selectSql = "SELECT cart_id FROM Cart WHERE member_id = ? AND product_id = ? FOR UPDATE";
+            String selectSql = "SELECT cart_id FROM CART WHERE member_id = ? AND product_id = ? FOR UPDATE";
             pstmt = conn.prepareStatement(selectSql);
             pstmt.setString(1, cart.getMemberId());
             pstmt.setString(2, cart.getProductId());
@@ -38,7 +38,7 @@ public class CartRepositoryImpl implements CartRepository {
 
             if (rs.next()) {
                 pstmt.close();
-                String updateSql = "UPDATE Cart SET quantity = quantity + ? WHERE member_id = ? AND product_id = ?";
+                String updateSql = "UPDATE CART SET quantity = quantity + ? WHERE member_id = ? AND product_id = ?";
                 pstmt = conn.prepareStatement(updateSql);
                 pstmt.setInt(1, cart.getQuantity());
                 pstmt.setString(2, cart.getMemberId());
@@ -46,7 +46,7 @@ public class CartRepositoryImpl implements CartRepository {
                 pstmt.executeUpdate();
             } else {
                 pstmt.close();
-                String insertSql = "INSERT INTO Cart (cart_id, member_id, product_id, quantity, price) VALUES (njw_cart_seq_num.nextval, ?, ?, ?, ?)";
+                String insertSql = "INSERT INTO CART (member_id, product_id, quantity, price) VALUES (?, ?, ?, ?)";
                 pstmt = conn.prepareStatement(insertSql);
                 pstmt.setString(1, cart.getMemberId());
                 pstmt.setString(2, cart.getProductId());
@@ -71,7 +71,7 @@ public class CartRepositoryImpl implements CartRepository {
     public ArrayList<Cart> findByMemberId(String memberId) {
         ArrayList<Cart> list = new ArrayList<>();
         String sql = "SELECT c.cart_id, c.member_id, c.product_id, c.quantity, p.product_name, p.price "
-                + "FROM Cart c, product p "
+                + "FROM CART c, PRODUCT p "
                 + "WHERE c.product_id = p.product_code AND c.member_id = ? "
                 + "ORDER BY c.cart_id DESC";
         Connection conn = null;
@@ -102,7 +102,7 @@ public class CartRepositoryImpl implements CartRepository {
 
     @Override
     public void deleteByMemberId(String memberId) {
-        String sql = "DELETE FROM Cart WHERE member_id = ?";
+        String sql = "DELETE FROM CART WHERE member_id = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {

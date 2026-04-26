@@ -17,7 +17,8 @@ public class SignUpUseCase {
             throw new UseCaseException(validationError);
         }
 
-        boolean[] duplicates = memberRepo.checkDuplicateOnSignUp(id, mail, phone);
+        String normalizedPhone = phone.replaceAll("-", "");
+        boolean[] duplicates = memberRepo.checkDuplicateOnSignUp(id, mail, normalizedPhone);
         StringBuilder sb = new StringBuilder();
         if (duplicates[0]) sb.append("아이디");
         if (duplicates[1]) { if (sb.length() > 0) sb.append("와 "); sb.append("이메일"); }
@@ -29,7 +30,7 @@ public class SignUpUseCase {
         member.setPw(pw);
         member.setName(name);
         member.setMail(mail);
-        member.setPhone(phone.replaceAll("-", ""));
+        member.setPhone(normalizedPhone);
         memberRepo.save(member);
     }
 

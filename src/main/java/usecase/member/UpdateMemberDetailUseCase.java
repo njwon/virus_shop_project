@@ -19,7 +19,8 @@ public class UpdateMemberDetailUseCase {
         String validationError = validate(name, mail, phone);
         if (validationError != null) throw new UseCaseException(validationError);
 
-        boolean[] duplicates = memberRepo.checkDuplicateOnUpdate(id, mail, phone);
+        String normalizedPhone = phone.replaceAll("-", "");
+        boolean[] duplicates = memberRepo.checkDuplicateOnUpdate(id, mail, normalizedPhone);
         StringBuilder sb = new StringBuilder();
         if (duplicates[0]) sb.append("이메일");
         if (duplicates[1]) { if (sb.length() > 0) sb.append(", 그리고 "); sb.append("전화번호"); }
@@ -30,7 +31,7 @@ public class UpdateMemberDetailUseCase {
         member.setId(id);
         member.setName(name);
         member.setMail(mail);
-        member.setPhone(phone.replaceAll("-", ""));
+        member.setPhone(normalizedPhone);
         member.setRole(existing.getRole());
 
         log.info("회원 정보 수정 - ID: {}", id);

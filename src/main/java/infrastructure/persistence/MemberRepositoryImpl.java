@@ -56,8 +56,7 @@ public class MemberRepositoryImpl implements MemberRepository {
         String sql = "SELECT "
                 + "(SELECT COUNT(*) FROM MEMBER WHERE id = ?) AS id_cnt, "
                 + "(SELECT COUNT(*) FROM MEMBER WHERE email = ?) AS mail_cnt, "
-                + "(SELECT COUNT(*) FROM MEMBER WHERE phone = ?) AS phone_cnt "
-                + "FROM DUAL";
+                + "(SELECT COUNT(*) FROM MEMBER WHERE phone = ?) AS phone_cnt";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -86,8 +85,7 @@ public class MemberRepositoryImpl implements MemberRepository {
         final boolean[] result = {false, false};
         String sql = "SELECT "
                 + "(SELECT COUNT(*) FROM MEMBER WHERE email = ? AND id != ?) AS mail_cnt, "
-                + "(SELECT COUNT(*) FROM MEMBER WHERE phone = ? AND id != ?) AS phone_cnt "
-                + "FROM DUAL";
+                + "(SELECT COUNT(*) FROM MEMBER WHERE phone = ? AND id != ?) AS phone_cnt";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -113,8 +111,7 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public void save(Member member) {
-        String sql = "INSERT INTO MEMBER (id, password, name, email, phone, uuid, njw_member_seq_num, logtime, updatetime, role) "
-                   + "VALUES (?, ?, ?, ?, ?, SYS_GUID(), njw_member_seq_num.nextval, SYSDATE, SYSDATE, DEFAULT)";
+        String sql = "INSERT INTO MEMBER (id, password, name, email, phone) VALUES (?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -135,7 +132,7 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public int updateDetail(Member member) {
-        String sql = "UPDATE MEMBER SET name = ?, email = ?, phone = ?, updated_at = SYSDATE WHERE id = ?";
+        String sql = "UPDATE MEMBER SET name = ?, email = ?, phone = ?, updatetime = NOW() WHERE id = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -156,7 +153,7 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public int updatePassword(Member member) {
-        String sql = "UPDATE MEMBER SET password = ?, updated_at = SYSDATE WHERE id = ?";
+        String sql = "UPDATE MEMBER SET password = ?, updatetime = NOW() WHERE id = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -175,8 +172,8 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public void insertRememberMeToken(String userId, String token, String ip, String userAgent) {
-        String sql = "INSERT INTO REMEMBER_ME_TOKEN (token_id, member_id, token_value, expiry_date, ip_address, user_agent) "
-                + "VALUES (njw_remember_me_seq_num.NEXTVAL, ?, ?, SYSDATE + 30, ?, ?)";
+        String sql = "INSERT INTO REMEMBER_ME_TOKEN (member_id, token_value, expiry_date, ip_address, user_agent) "
+                + "VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?)";
         try (Connection conn = DBManager.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userId);
             pstmt.setString(2, token);
@@ -192,7 +189,7 @@ public class MemberRepositoryImpl implements MemberRepository {
     public Member findByRememberMeToken(String token) {
         String sql = "SELECT m.id, m.password, m.name, m.email, m.phone, m.role, r.ip_address, r.user_agent "
                 + "FROM MEMBER m JOIN REMEMBER_ME_TOKEN r ON m.id = r.member_id "
-                + "WHERE r.token_value = ? AND r.expiry_date > SYSDATE";
+                + "WHERE r.token_value = ? AND r.expiry_date > NOW()";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;

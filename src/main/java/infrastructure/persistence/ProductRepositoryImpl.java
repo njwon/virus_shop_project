@@ -21,7 +21,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     private static final String SELECT_COLS =
-        "SELECT product_code, product_name, price, category, description, image_name, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at, uuid FROM product";
+        "SELECT product_code, product_name, price, category, description, image_name, DATE_FORMAT(created_at, '%Y-%m-%d') AS created_at, uuid FROM PRODUCT";
 
     private Product mapRow(ResultSet rs) throws Exception {
         Product p = new Product();
@@ -78,7 +78,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Product findByUuid(String uuid) {
-        String sql = SELECT_COLS + " WHERE uuid = HEXTORAW(?)";
+        String sql = SELECT_COLS + " WHERE uuid = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -98,8 +98,8 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public int save(Product product) {
-        String sql = "INSERT INTO product (product_code, product_name, price, category, description, image_name, created_at, uuid) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, SYSDATE, SYS_GUID())";
+        String sql = "INSERT INTO PRODUCT (product_code, product_name, price, category, description, image_name) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -122,7 +122,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public int update(Product product) {
-        String sql = "UPDATE product SET product_name = ?, price = ?, category = ?, description = ?, image_name = ? WHERE product_code = ?";
+        String sql = "UPDATE PRODUCT SET product_name = ?, price = ?, category = ?, description = ?, image_name = ? WHERE product_code = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -145,7 +145,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public void deleteByUuid(String uuid) {
-        String sql = "DELETE FROM product WHERE uuid = HEXTORAW(?)";
+        String sql = "DELETE FROM PRODUCT WHERE uuid = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
