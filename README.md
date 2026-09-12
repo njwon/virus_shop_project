@@ -338,3 +338,6 @@ UseCase 계층을 별도로 분리해서 컨트롤러가 비즈니스 로직을 
 ## 라이선스
 
 본 프로젝트는 학습 및 포트폴리오 목적으로 제작되었습니다.
+
+---
+Made by [노정원 (njwon)](https://njw.kro.kr) · [블로그](https://njw.kro.kr/blog/)
